@@ -2,11 +2,11 @@
 
 namespace App\Controllers;
 
-use App\Models\ImageModel;
+
 use CodeIgniter\Shield\Models\UserIdentityModel;
 use Config\Services;
 
-use Shield\Facades\Auth;
+
 
 
 
@@ -34,17 +34,17 @@ class DashboardController extends BaseController
         $user = Services::auth()->user();
         $data["user"] = $user;
         $image = $user->imagePath;
-        // Detect MIME type
-        $mimeType = 'image/jpeg'; // Default MIME type; adjust if necessary
+
+        $mimeType = 'image/jpeg';
         if (strpos($image, '.png') !== false) {
             $mimeType = 'image/png';
         } elseif (strpos($image, '.gif') !== false) {
             $mimeType = 'image/gif';
         }
 
-        // Encode the image data
+
         $data["image"] = 'data:' . $mimeType . ';base64,' . base64_encode($image);
-        // dd($user);
+
 
         return view('layouts/MainLayout', [
             'sidebar' => view('components/sidebars/sidebar'),
@@ -96,14 +96,12 @@ class DashboardController extends BaseController
 
             $imageFile = $this->request->getFile('image');
             if ($imageFile->isValid() && !$imageFile->hasMoved()) {
-                // Generate a new file name
+
                 $newName = $imageFile->getRandomName();
                 $imageBlob = file_get_contents($imageFile->getTempName());
 
-                // Move the file to the upload directory
                 $imageFile->move(WRITEPATH . 'uploads', $newName);
 
-                // Save the image data to the database
                 if (
                     $userModel->update($userId, [
 
@@ -134,25 +132,10 @@ class DashboardController extends BaseController
         return redirect()->back();
     }
 
-    // private function fetchPixabayImages($keyword)
-    // {
-
-
-    //     try {
-    //         $response = $client->get($url);
-    //         $body = $response->getBody();
-    //         $data = json_decode($body, true);
-    //         dd($data);
-    //         return $data['hits'];
-    //     } catch (\Exception $e) {
-    //         log_message('error', $e->getMessage());
-    //         return [];
-    //     }
-    // }
     public function search()
     {
         $apiKey = '45099767-669609db62b04ded3d7e39545';
-        $keyword = $this->request->getVar('q') ?? ''; // Default search keyword
+        $keyword = $this->request->getVar('q') ?? '';
         $client = Services::curlrequest();
         $photoURL = 'https://pixabay.com/api/?key=' . $apiKey . '&q=' . urlencode($keyword) . '&image_type=photo';
         $videoURL = 'https://pixabay.com/api/videos/?key=' . $apiKey . '&q=' . urlencode($keyword);
@@ -164,24 +147,23 @@ class DashboardController extends BaseController
             $photoData = json_decode($photoResponse->getBody(), true);
             $videoData = json_decode($videoResponse->getBody(), true);
 
-            // Check if the 'hits' key exists and is an array
+
             $photos = isset($photoData['hits']) && is_array($photoData['hits']) ? $photoData['hits'] : [];
             $videos = isset($videoData['hits']) && is_array($videoData['hits']) ? $videoData['hits'] : [];
 
             $data['hits'] = array_merge($photos, $videos);
 
-            // dd($data['hits']);
+
         } catch (\Exception $e) {
             log_message('error', $e->getMessage());
 
         }
 
 
-        // $data['images'] = $this->fetchPixabayImages($keyword);
 
         return view('layouts/MainLayout', [
             'sidebar' => view('components/sidebars/sidebar'),
-            'content' => view('pages/search',$data ),
+            'content' => view('pages/search', $data),
         ]);
     }
 
